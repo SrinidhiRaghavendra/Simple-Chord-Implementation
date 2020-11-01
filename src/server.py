@@ -105,10 +105,19 @@ class ProcessorHandler:
             return self
 
     def closestPred(self, key):
-        for i in range(len(self.fingerTable)-1,-1,-1):
-            if(self.fingerTable[i].id > self.id and self.fingerTable[i].id < key):
-                return self.fingerTable[i]
-        return self
+        if(key < self.id):
+            prev = self
+            for i in range(0,len(self.fingerTable)):
+                if(self.fingerTable[i].id > key):
+                    break
+                else:
+                    prev = self.fingerTable[i]
+            return prev
+        else:
+            for i in range(len(self.fingerTable)-1,-1,-1):
+                if(self.fingerTable[i].id < key):
+                    return self.fingerTable[i]
+            return self
 
     def getNodeSucc(self):
         if(self.fingerTable is None or len(self.fingerTable) == 0):
