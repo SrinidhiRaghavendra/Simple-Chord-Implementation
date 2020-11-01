@@ -7,7 +7,7 @@ from chord import FileStore
 from chord import ttypes
 
 from thrift.transport import TSocket
-from thrift.transport import TTransport,TBufferedTransport
+from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
@@ -22,7 +22,7 @@ class ProcessorHandler:
         self.ipaddr = socket.gethostbyname(socket.gethostname()) 
         self.port = port
         sha256 = hashlib.sha256()
-        sha256.update((ipaddr+":"+port).encode('utf-8'))
+        sha256.update((self.ipaddr+":"+self.port).encode('utf-8'))
         self.id = sha256.hexdigest()
        
 
@@ -34,8 +34,9 @@ class ProcessorHandler:
         fileid = sha256.hexdigest()
         if(self.pred == None):
             self.pred = self.findPred(self.id)
-        if(fileid <= self.pred or fileid > self.id):
+        if(fileid <= self.pred.id or fileid > self.id):
             #throw system error
+            pass
         if(filename in self.files):
             self.files[filename] += 1
         else:
@@ -50,12 +51,13 @@ class ProcessorHandler:
     def readFile(self, filename):
         if(filename not in self.files):
             #throw System error
-        
+            pass
         sha256 = hashlib.sha256()
         sha256.update(filename.encode('utf-8'))
         fileid = sha256.hexdigest()
         if(fileid <= self.pred or fileid > self.id):
             #throw System error
+            pass
         readFile = open(filename, "r")
         content = readFile.read()
         readFile.close()
@@ -122,6 +124,7 @@ class ProcessorHandler:
     def getNodeSucc(self):
         if(self.fingerTable is None or len(self.fingerTable) == 0):
             #throw error
+            pass
         return self.fingerTable[0]
 
 
@@ -135,13 +138,6 @@ if __name__ == '__main__':
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
     server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
-
-    # You could do one of these for a multithreaded server
-    # server = TServer.TThreadedServer(
-    #     processor, transport, tfactory, pfactory)
-    # server = TServer.TThreadPoolServer(
-    #     processor, transport, tfactory, pfactory)
-
     print('Starting the server...')
     server.serve()
     print('done.')
