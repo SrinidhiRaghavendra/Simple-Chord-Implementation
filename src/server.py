@@ -24,7 +24,7 @@ class ProcessorHandler:
         sha256 = hashlib.sha256()
         sha256.update((self.ipaddr+":"+self.port).encode('utf-8'))
         self.id = sha256.hexdigest()
-       
+        self.node = ttypes.NodeID(self.id, self.ipaddr, self.port)
 
     def writeFile(self, rFile):
         rFileMeta = rFile.meta
@@ -35,8 +35,7 @@ class ProcessorHandler:
         if(self.pred == None):
             self.pred = self.findPred(self.id)
         if(fileid <= self.pred.id or fileid > self.id):
-            #throw system error
-            pass
+            raise ttypes.SystemException("File id does not belong to this node")
         if(filename in self.files):
             self.files[filename] += 1
         else:
@@ -49,15 +48,11 @@ class ProcessorHandler:
 
 
     def readFile(self, filename):
-        if(filename not in self.files):
-            #throw System error
-            pass
+        if(filename not in self.files or fileid <= self.pred or fileid > self.id):
+            raise ttypes.SystemException("Given filename not present in this node")
         sha256 = hashlib.sha256()
         sha256.update(filename.encode('utf-8'))
         fileid = sha256.hexdigest()
-        if(fileid <= self.pred or fileid > self.id):
-            #throw System error
-            pass
         readFile = open(filename, "r")
         content = readFile.read()
         readFile.close()
@@ -70,9 +65,12 @@ class ProcessorHandler:
         self.fingerTable = node_list
 
     def findSucc(self, key):
+        if(self.fingerTable is None or len(self.fingerTable) == 0):
+            raise ttypes.SystemException("No finger table present for this node")
         if(key == self.id):
             return self
         pred = self.findPred(key);
+        print(type(pred))
         #ask pred node for its succesor and return it
         transport = TSocket.TSocket(pred.ip, int(pred.port))
         transport = TTransport.TBufferedTransport(transport)
@@ -84,6 +82,8 @@ class ProcessorHandler:
         return succ
 
     def findPred(self, key):
+        if(self.fingerTable is None or len(self.fingerTable) == 0):
+            raise ttypes.SystemException("No finger table present for this node")
         if(key <= self.id or key > self.fingerTable[0].id):
             #ask the closest known pred node
             predNode = self.closestPred(key)
@@ -108,7 +108,7 @@ class ProcessorHandler:
 
     def closestPred(self, key):
         if(key < self.id):
-            prev = self
+            prev = self.node
             for i in range(0,len(self.fingerTable)):
                 if(self.fingerTable[i].id > key):
                     break
@@ -123,8 +123,7 @@ class ProcessorHandler:
 
     def getNodeSucc(self):
         if(self.fingerTable is None or len(self.fingerTable) == 0):
-            #throw error
-            pass
+            raise ttypes.SystemException("No finger table present for this node")
         return self.fingerTable[0]
 
 
