@@ -59,8 +59,8 @@ class ProcessorHandler:
         content = readFile.read()
         readFile.close()
 
-        metadata = RFileMetadata(filename, self.files[filename])
-        rFile = RFile(metadata, content)
+        metadata = ttypes.RFileMetadata(filename, self.files[filename])
+        rFile = ttypes.RFile(metadata, content)
         return rFile
 
     def setFingertable(self, node_list):
@@ -101,11 +101,8 @@ class ProcessorHandler:
                 #ask the pred node for the actual pred node
                 transport = TSocket.TSocket(predNode.ip, int(predNode.port))
 
-                # Buffering is critical. Raw sockets are very slow
                 transport = TTransport.TBufferedTransport(transport)
-                # Wrap in a protocol
                 protocol = TBinaryProtocol.TBinaryProtocol(transport)
-                # Create a client to use the protocol encoder
                 client = FileStore.Client(protocol)
                 transport.open()
                 pred = client.findPred(key)
